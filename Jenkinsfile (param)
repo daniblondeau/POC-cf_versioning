@@ -1,0 +1,39 @@
+pipeline {
+
+    agent any
+    
+    environment {
+        PROJECT = 'YOUR_PROJECT'
+    }
+    
+    parameters {
+    gitParameter name: 'TAG', 
+                 type: 'PT_TAG',
+                 defaultValue: 'v*'
+    }
+
+    stages {
+
+        stage('Set Git') {
+            steps {
+                echo 'Setting GitHub...'
+                checkout([$class: 'GitSCM', branches: [[name: "${params.TAG}"]], extensions: [], userRemoteConfigs: [[credentialsId: 'GitHub', url: 'https://github.com/GITHUB-USER/Test.git']]])
+            }
+        }
+
+        stage('Get Commit and Tag') {
+
+            environment {
+                TAG = sh(script: "git describe --tags", returnStdout: true)
+                COMMIT = sh(script: "git rev-parse --short HEAD", returnStdout: true)
+                FILE = "/var/jenkins_home/build/deploy.sh"
+            }
+            
+            steps {
+                echo "the last tag from Test repository is ${TAG}"
+                echo "its commit is ${COMMIT}"
+                echo "the file is ${FILE}"
+            }
+        }
+    }
+}
